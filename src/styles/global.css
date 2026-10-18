@@ -1,0 +1,61 @@
+@import "tailwindcss";
+@import "@kjaniec-dev/design/tailwind.css";
+@import "@kjaniec-dev/ui/ui.css";
+
+/* Let Tailwind see the classes used inside the UI kit's compiled components. */
+@source "../../node_modules/@kjaniec-dev/ui/dist/**/*.js";
+
+@layer base {
+  body {
+    background: var(--kj-background);
+    color: var(--kj-foreground);
+    font-family: var(--kj-font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--kj-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* The static intro copy gives way to the quiz and results once the island is active. */
+body:is([data-view="quiz"], [data-view="results"]) .static-only {
+  display: none;
+}
+
+/* Radar chart (SVG): colours come from the design tokens. */
+.radar-ring,
+.radar-axis {
+  fill: none;
+  stroke: var(--kj-border);
+}
+
+.radar-shape {
+  fill: var(--kj-primary);
+  fill-opacity: 0.2;
+  stroke: var(--kj-primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.radar-dot {
+  fill: var(--kj-primary);
+}
+
+.radar-label {
+  fill: var(--kj-foreground);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.radar-value {
+  fill: var(--kj-muted-foreground);
+  font-weight: 400;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
