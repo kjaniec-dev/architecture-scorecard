@@ -1,33 +1,46 @@
 ---
 import "../styles/global.css";
+import HeaderControls from "../components/HeaderControls";
+import { LANGS, getLocale, langPath, type Lang } from "../i18n";
 
 interface Props {
-  title: string;
-  description: string;
+  lang: Lang;
 }
 
-const { title, description } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site);
+const { lang } = Astro.props;
+const { m } = getLocale(lang);
+const urlFor = (l: Lang) => new URL(langPath(l), Astro.site);
+const canonical = urlFor(lang);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
+    <title>{m.meta.title}</title>
+    <meta name="description" content={m.meta.description} />
     <meta name="color-scheme" content="light dark" />
     <link rel="canonical" href={canonical} />
+    {LANGS.map((l) => <link rel="alternate" hreflang={l} href={urlFor(l)} />)}
+    <link rel="alternate" hreflang="x-default" href={urlFor("en")} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta property="og:title" content={m.meta.title} />
+    <meta property="og:description" content={m.meta.description} />
     <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={lang === "pl" ? "pl_PL" : "en_US"} />
     <script is:inline>
-      // The design kit switches theme with a `.dark` class; follow the OS setting.
+      // The design kit switches theme with a `.dark` class. Apply the stored choice (or follow the
+      // OS setting) before first paint. Keep in sync with src/lib/theme.ts.
       const query = matchMedia("(prefers-color-scheme: dark)");
-      const apply = () => document.documentElement.classList.toggle("dark", query.matches);
+      const apply = () => {
+        let choice = "system";
+        try {
+          choice = localStorage.getItem("architecture-scorecard.theme") || "system";
+        } catch {}
+        document.documentElement.classList.toggle("dark", choice === "dark" || (choice !== "light" && query.matches));
+      };
       apply();
       query.addEventListener("change", apply);
     </script>
@@ -35,13 +48,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   <body class="min-h-screen flex flex-col">
     <a
       class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-10 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
-      href="#main">Skip to content</a
+      href="#main">{m.header.skip}</a
     >
 
     <header class="no-print border-b border-border bg-card">
-      <div class="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
-        <a class="font-bold text-foreground no-underline" href="/">Architecture &amp; Delivery Scorecard</a>
-        <span class="text-xs text-muted-foreground">Free &middot; No account &middot; No tracking &middot; No AI</span>
+      <div class="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+        <a class="font-bold text-foreground no-underline" href={langPath(lang)}>Architecture &amp; Delivery Scorecard</a>
+        <div class="min-h-9">
+          <HeaderControls client:only="react" lang={lang} />
+        </div>
       </div>
     </header>
 
@@ -51,10 +66,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 
     <footer class="no-print border-t border-border text-sm text-muted-foreground">
       <div class="mx-auto flex w-full max-w-3xl flex-wrap justify-between gap-2 px-4 py-4">
-        <span>&copy; <a class="text-secondary underline" href="https://kjaniec.dev">kjaniec.dev</a></span>
-        <a class="text-secondary underline" href="https://github.com/kjaniec-dev/architecture-scorecard"
-          >Source on GitHub</a
-        >
+        <span>&copy; <a class="text-secondary underline" href="https://kjaniec.dev">kjaniec.dev</a> &middot; {m.header.badge}</span>
+        <a class="text-secondary underline" href="https://github.com/kjaniec-dev/architecture-scorecard">{m.footer.source}</a>
       </div>
     </footer>
   </body>

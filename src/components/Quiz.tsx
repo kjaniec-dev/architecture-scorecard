@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Card, Progress, Radio } from "@kjaniec-dev/ui";
-import { areas, questions } from "../lib/questions";
+import type { Locale } from "../i18n";
 import { countAnswered, type Answers } from "../lib/scoring";
 
 interface Props {
+  locale: Locale;
   answers: Answers;
   step: number;
   onChoose: (index: number, score: number) => void;
@@ -11,7 +12,8 @@ interface Props {
   onNext: () => void;
 }
 
-export function Quiz({ answers, step, onChoose, onBack, onNext }: Props) {
+export function Quiz({ locale, answers, step, onChoose, onBack, onNext }: Props) {
+  const { areas, questions, m } = locale;
   const area = areas[step]!;
   const isLast = step === areas.length - 1;
   const answered = countAnswered(answers);
@@ -31,16 +33,16 @@ export function Quiz({ answers, step, onChoose, onBack, onNext }: Props) {
   const next = () => {
     const open = items.find(({ index }) => answers[index] === null);
     if (!open) return onNext();
-    setMessage("Please answer every question in this section to continue.");
+    setMessage(m.quiz.incomplete);
     document.querySelector<HTMLInputElement>(`input[name="q-${open.question.id}"]`)?.focus();
   };
 
   return (
     <section aria-labelledby="quiz-title" className="space-y-5">
       <div className="space-y-1.5">
-        <Progress value={(answered / questions.length) * 100} aria-label="Progress" />
+        <Progress value={(answered / questions.length) * 100} aria-label={m.quiz.progress} />
         <p className="text-sm text-muted-foreground" aria-live="polite">
-          Step {step + 1} of {areas.length} · {answered} of {questions.length} answered
+          {m.quiz.step(step + 1, areas.length, answered, questions.length)}
         </p>
       </div>
 
@@ -82,9 +84,9 @@ export function Quiz({ answers, step, onChoose, onBack, onNext }: Props) {
 
       <div className="flex flex-wrap gap-3">
         <Button variant="outline" onClick={onBack}>
-          Back
+          {m.quiz.back}
         </Button>
-        <Button onClick={next}>{isLast ? "See my results" : "Next"}</Button>
+        <Button onClick={next}>{isLast ? m.quiz.seeResults : m.quiz.next}</Button>
       </div>
     </section>
   );

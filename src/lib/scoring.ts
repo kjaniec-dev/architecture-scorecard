@@ -1,7 +1,7 @@
 // Pure, rule-based scoring. No DOM, no I/O, no randomness: the same answers always
 // produce the same result.
 
-import type { Area, AreaId, Question } from "./questions";
+import type { Area, Question } from "./questions";
 
 export const MAX_OPTION_SCORE = 3;
 
@@ -11,15 +11,17 @@ export const ANSWER_FORMAT_VERSION = 1;
 /** One entry per question, in order: the chosen option's score (0-3), or null if unanswered. */
 export type Answers = (number | null)[];
 
+export type RatingKey = "high-risk" | "needs-attention" | "solid" | "strong";
+export type SeverityKey = "high" | "medium" | "low";
+
+// Wording for both lives in src/i18n; the scoring only decides which band applies.
 export interface Rating {
-  key: "high-risk" | "needs-attention" | "solid" | "strong";
-  label: string;
+  key: RatingKey;
   below: number;
 }
 
 export interface Severity {
-  key: "high" | "medium" | "low";
-  label: string;
+  key: SeverityKey;
   atLeast: number;
 }
 
@@ -32,16 +34,16 @@ export interface Risk {
 }
 
 const RATINGS: readonly Rating[] = [
-  { key: "high-risk", label: "High risk", below: 30 },
-  { key: "needs-attention", label: "Needs attention", below: 55 },
-  { key: "solid", label: "Solid", below: 80 },
-  { key: "strong", label: "Strong", below: Infinity },
+  { key: "high-risk", below: 30 },
+  { key: "needs-attention", below: 55 },
+  { key: "solid", below: 80 },
+  { key: "strong", below: Infinity },
 ];
 
 const SEVERITIES: readonly Severity[] = [
-  { key: "high", label: "High", atLeast: 6 },
-  { key: "medium", label: "Medium", atLeast: 3 },
-  { key: "low", label: "Low", atLeast: 0 },
+  { key: "high", atLeast: 6 },
+  { key: "medium", atLeast: 3 },
+  { key: "low", atLeast: 0 },
 ];
 
 export const emptyAnswers = (count: number): Answers => new Array<number | null>(count).fill(null);
@@ -103,7 +105,7 @@ export interface Scores {
   areas: Record<string, number>;
 }
 
-type Scorable = Pick<Question, "weight"> & { area: AreaId | string };
+type Scorable = Pick<Question, "weight"> & { area: string };
 
 export function scoreAnswers(
   areas: readonly Pick<Area, "id">[],

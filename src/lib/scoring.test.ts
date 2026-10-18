@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import { areas, questions, type Question } from "./questions";
+import { getLocale } from "../i18n";
+import type { Question } from "./questions";
 import {
   decodeAnswers,
   encodeAnswers,
@@ -14,21 +15,23 @@ import {
 } from "./scoring";
 import { buildMailto, buildSummary } from "./summary";
 
+const { areas, questions, m } = getLocale("en");
+
 const all = (value: number | null): Answers => questions.map(() => value);
 
 describe("question set", () => {
-  test("is well formed", () => {
+  test("is structurally sound", () => {
     expect(questions).toHaveLength(20);
     expect(new Set(questions.map((q) => q.id)).size).toBe(questions.length);
-    for (const q of questions) {
-      expect(areas.some((a) => a.id === q.area), `${q.id}: known area`).toBe(true);
-      expect(q.options, `${q.id}: four options`).toHaveLength(4);
-      for (const field of ["text", "risk", "impact", "fix"] as const) {
-        expect(q[field].trim(), `${q.id}: ${field}`).not.toBe("");
-      }
-    }
     for (const area of areas) {
       expect(questions.some((q) => q.area === area.id), `${area.id}: has questions`).toBe(true);
+    }
+  });
+
+  test("every area carries the same total weight, so areas are comparable", () => {
+    for (const area of areas) {
+      const total = questions.filter((q) => q.area === area.id).reduce((sum, q) => sum + q.weight, 0);
+      expect(total, area.id).toBe(10);
     }
   });
 });
@@ -98,7 +101,7 @@ describe("bands", () => {
 
 describe("topRisks", () => {
   const q = (id: string, weight: 1 | 2 | 3): Question => ({
-    id,
+    id: id as Question["id"],
     area: "delivery",
     weight,
     text: id,
@@ -161,16 +164,17 @@ describe("email summary", () => {
   test("builds the summary and a mailto link", () => {
     const summary = buildSummary({
       overall: 42,
-      rating: { label: "Needs attention" },
+      ratingLabel: m.ratings["needs-attention"].label,
       areaResults: [{ name: "Delivery & Releases", score: 40 }],
       risks: [{ title: "No tested way to undo a bad release", areaName: "Delivery & Releases" }],
       link: "https://example.test/#r=1.0",
+      email: m.email,
     });
     expect(summary).toContain("42/100 (Needs attention)");
     expect(summary).toContain("1. No tested way to undo a bad release (Delivery & Releases)");
     expect(summary.endsWith("https://example.test/#r=1.0")).toBe(true);
 
-    const href = buildMailto({ to: "me@example.test", overall: 42, summary });
+    const href = buildMailto({ to: "me@example.test", overall: 42, summary, email: m.email });
     expect(href.startsWith("mailto:me@example.test?subject=")).toBe(true);
     expect(new URLSearchParams(href.split("?")[1]).get("body")).toContain(summary);
   });

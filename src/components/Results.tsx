@@ -1,26 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Button, Card, CardContent, Progress, ProgressRing, buttonVariants } from "@kjaniec-dev/ui";
 import { config } from "../lib/config";
-import { areas, questions } from "../lib/questions";
+import type { Locale } from "../i18n";
 import {
   ratingFor,
   scoreAnswers,
   toResultHash,
   topRisks,
   type Answers,
-  type Rating,
-  type Severity,
+  type SeverityKey,
 } from "../lib/scoring";
 import { buildMailto, buildSummary } from "../lib/summary";
 import { Radar } from "./Radar";
-
-const RATING_TEXT: Record<Rating["key"], string> = {
-  "high-risk":
-    "Several fundamentals are missing. Start with the risks below: they are the most likely to cause an outage or data loss.",
-  "needs-attention": "The basics are partly in place, but there are gaps that could hurt you under pressure.",
-  solid: "You have a good foundation. Targeted improvements will move you from solid to resilient.",
-  strong: "Excellent practices across the board. The job now is keeping them current and tested.",
-};
 
 const RATING_TONE = {
   "high-risk": { ring: "danger", text: "text-danger", bar: "bg-danger" },
@@ -29,18 +20,20 @@ const RATING_TONE = {
   strong: { ring: "success", text: "text-success", bar: "bg-success" },
 } as const;
 
-const SEVERITY_BADGE: Record<Severity["key"], "danger" | "warning" | "success"> = {
+const SEVERITY_BADGE: Record<SeverityKey, "danger" | "warning" | "success"> = {
   high: "danger",
   medium: "warning",
   low: "success",
 };
 
 interface Props {
+  locale: Locale;
   answers: Answers;
   onRetake: () => void;
 }
 
-export function Results({ answers, onRetake }: Props) {
+export function Results({ locale, answers, onRetake }: Props) {
+  const { areas, questions, m } = locale;
   const heading = useRef<HTMLHeadingElement>(null);
   const [copyStatus, setCopyStatus] = useState("");
 
@@ -58,8 +51,9 @@ export function Results({ answers, onRetake }: Props) {
     const areaResults = areas.map((area) => ({ ...area, score: scores.areas[area.id] ?? 0 }));
     const summary = buildSummary({
       overall: scores.overall,
-      rating,
       areaResults,
+      ratingLabel: m.ratings[rating.key].label,
+      email: m.email,
       risks: risks.map((r) => ({
         title: r.question.risk,
         areaName: areas.find((a) => a.id === r.question.area)!.name,
@@ -67,45 +61,43 @@ export function Results({ answers, onRetake }: Props) {
       link,
     });
     const bookingHref =
-      config.bookingUrl || buildMailto({ to: config.contactEmail, overall: scores.overall, summary });
+      config.bookingUrl || buildMailto({ to: config.contactEmail, overall: scores.overall, summary, email: m.email });
     return { scores, rating, risks, areaResults, bookingHref };
-  }, [answers, link]);
+  }, [answers, link, areas, questions, m]);
 
   const tone = RATING_TONE[rating.key];
 
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(link);
-      setCopyStatus("Link copied.");
+      setCopyStatus(m.results.copied);
     } catch {
-      setCopyStatus("Could not copy. Copy the address from the browser bar instead.");
+      setCopyStatus(m.results.copyFailed);
     }
   };
 
-  const radarDescription = `Radar chart of scores per area: ${areaResults
-    .map((a) => `${a.short} ${a.score}`)
-    .join(", ")}.`;
+  const radarDescription = m.results.radar(areaResults.map((a) => ({ name: a.short, score: a.score })));
 
   return (
     <section aria-labelledby="results-title" className="space-y-8">
       <h2 id="results-title" tabIndex={-1} ref={heading} className="text-2xl font-bold outline-none">
-        Your results
+        {m.results.title}
       </h2>
 
       <Card className="flex flex-col items-start gap-5 p-6 sm:flex-row sm:items-center">
         <ProgressRing value={scores.overall} size="xl" tone={tone.ring}>
-          <span className={`text-3xl font-extrabold ${tone.text}`} aria-label={`Score ${scores.overall} out of 100`}>
+          <span className={`text-3xl font-extrabold ${tone.text}`} aria-label={m.results.scoreLabel(scores.overall)}>
             {scores.overall}
           </span>
         </ProgressRing>
         <div>
-          <p className={`text-xl font-bold ${tone.text}`}>{rating.label}</p>
-          <p className="text-muted-foreground">{RATING_TEXT[rating.key]}</p>
+          <p className={`text-xl font-bold ${tone.text}`}>{m.ratings[rating.key].label}</p>
+          <p className="text-muted-foreground">{m.ratings[rating.key].text}</p>
         </div>
       </Card>
 
       <div>
-        <h3 className="mb-3 text-xl font-bold">Score by area</h3>
+        <h3 className="mb-3 text-xl font-bold">{m.results.byArea}</h3>
         <div className="grid items-center gap-6 md:grid-cols-2">
           <Radar items={areaResults.map((a) => ({ label: a.short, score: a.score }))} description={radarDescription} />
           <ul className="grid gap-4">
@@ -123,9 +115,9 @@ export function Results({ answers, onRetake }: Props) {
       </div>
 
       <div>
-        <h3 className="mb-3 text-xl font-bold">{risks.length === 3 ? "Your 3 biggest risks" : "Your biggest risks"}</h3>
+        <h3 className="mb-3 text-xl font-bold">{m.results.risks(risks.length)}</h3>
         {risks.length === 0 ? (
-          <p>No gaps found: every answer was the strongest option. Nicely done.</p>
+          <p>{m.results.noGaps}</p>
         ) : (
           <ol className="grid gap-4">
             {risks.map(({ question, score, severity }, i) => (
@@ -137,20 +129,20 @@ export function Results({ answers, onRetake }: Props) {
                         <span className="text-muted-foreground">{i + 1}.</span> {question.risk}
                       </h4>
                       <Badge variant={SEVERITY_BADGE[severity.key]} className="shrink-0">
-                        {severity.label} priority
+                        {m.severities[severity.key]}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{areas.find((a) => a.id === question.area)!.name}</p>
                     <p className="rounded-lg bg-muted px-3 py-2 text-sm">
-                      <strong>Your answer: </strong>
+                      <strong>{m.results.yourAnswer}</strong>
                       {question.options[score]}
                     </p>
                     <p>
-                      <strong>Why it matters: </strong>
+                      <strong>{m.results.whyItMatters}</strong>
                       {question.impact}
                     </p>
                     <p>
-                      <strong>What to do: </strong>
+                      <strong>{m.results.whatToDo}</strong>
                       {question.fix}
                     </p>
                   </CardContent>
@@ -163,41 +155,33 @@ export function Results({ answers, onRetake }: Props) {
 
       <Card className="no-print space-y-3 border-primary p-6" aria-labelledby="cta-title">
         <h3 id="cta-title" className="text-xl font-bold">
-          Want a second pair of eyes?
+          {m.results.ctaTitle}
         </h3>
-        <p>
-          A scorecard only sees what you tell it. In an architecture review we go through these results against your
-          real system and turn them into a prioritised plan.
-        </p>
+        <p>{m.results.ctaText}</p>
         <a className={buttonVariants({ size: "lg" })} href={bookingHref}>
-          Book an architecture review
+          {m.results.ctaButton}
         </a>
         <p className="text-sm text-muted-foreground">
-          {config.bookingUrl
-            ? "Opens the booking page."
-            : "Opens your email app with your results filled in. Nothing is sent until you press send."}
+          {config.bookingUrl ? m.results.ctaBookingHint : m.results.ctaMailHint}
         </p>
       </Card>
 
       <div className="no-print flex flex-wrap items-center gap-3">
         <Button variant="outline" onClick={copyLink}>
-          Copy link to these results
+          {m.results.copyLink}
         </Button>
         <Button variant="outline" onClick={() => window.print()}>
-          Print or save as PDF
+          {m.results.print}
         </Button>
         <Button variant="ghost" onClick={onRetake}>
-          Retake the check
+          {m.results.retake}
         </Button>
         <span className="text-sm text-muted-foreground" role="status">
           {copyStatus}
         </span>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        Indicative, rule-based self-assessment built from your answers. It is not an audit and does not inspect your
-        systems.
-      </p>
+      <p className="text-sm text-muted-foreground">{m.results.disclaimer}</p>
     </section>
   );
 }

@@ -28,12 +28,26 @@ that uses the kit's tokens. The kit switches theme with a `.dark` class, which a
 `Layout.astro` sets from the OS preference.
 
 ```
-src/lib/          scoring, questions, summary, config (pure TypeScript, unit tested)
-src/components/   Scorecard (state), Quiz, Results, Radar
-src/pages/        index.astro (static intro + "how it works" for SEO)
+src/lib/          scoring, question structure, summary, theme, config (pure TypeScript, unit tested)
+src/i18n/         en.ts, pl.ts (all wording, typed so no language can fall behind), index.ts
+src/components/   Scorecard (state), Quiz, Results, Radar, HeaderControls, Home.astro
+src/pages/        index.astro (EN, "/") and pl/index.astro (PL, "/pl/")
 src/styles/       global.css (Tailwind + kit imports, radar, print)
 public/           favicon, CNAME, robots.txt
 ```
+
+## Languages and theme
+
+English lives at `/` and Polish at `/pl/`: separate static pages with `hreflang` alternates, so each
+is indexable. The switch in the header keeps the `#...` result link, and answers are language
+neutral, so a result (or an unfinished quiz) carries over between languages.
+
+The theme switch offers Auto (follow the OS), Light and Dark. Only an explicit choice is stored, in
+local storage; an inline script applies it before first paint to avoid a flash.
+
+To add a language: create `src/i18n/<code>.ts` satisfying `Messages`, register it in
+`src/i18n/types.ts` (`LANGS`) and `src/i18n/index.ts`, and add a page under `src/pages/<code>/`.
+The compiler and `src/i18n/i18n.test.ts` flag anything missing.
 
 ## Privacy
 
@@ -46,7 +60,8 @@ kept in the browser's local storage. A shareable result link holds the answers i
 
 - `src/lib/config.ts`: contact email, or a booking URL (Cal.com, Calendly...). With no `bookingUrl`
   the button opens an email with the results pre-filled. **Set `contactEmail` before deploying.**
-- `src/lib/questions.ts`: all questions, options, weights and recommendations. If you add, remove or
+- `src/i18n/en.ts`, `src/i18n/pl.ts`: all question wording, options and recommendations.
+- `src/lib/questions.ts`: which questions exist, their area and weight. If you add, remove or
   reorder questions, bump `ANSWER_FORMAT_VERSION` in `src/lib/scoring.ts` so old links are rejected
   instead of misread.
 

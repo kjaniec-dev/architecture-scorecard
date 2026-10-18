@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@kjaniec-dev/ui";
-import { areas, questions } from "../lib/questions";
+import { getLocale, type Lang } from "../i18n";
 import {
   countAnswered,
   decodeAnswers,
@@ -15,16 +15,14 @@ import { Quiz } from "./Quiz";
 import { Results } from "./Results";
 
 const STORAGE_KEY = "architecture-scorecard.answers";
-const TOTAL = questions.length;
-
 type View = "intro" | "quiz" | "results";
 
 // Storage can be unavailable (private mode, blocked site data): the app works without it.
-function loadSaved(): Answers {
+function loadSaved(total: number): Answers {
   try {
-    return decodeAnswers(localStorage.getItem(STORAGE_KEY), TOTAL) ?? emptyAnswers(TOTAL);
+    return decodeAnswers(localStorage.getItem(STORAGE_KEY), total) ?? emptyAnswers(total);
   } catch {
-    return emptyAnswers(TOTAL);
+    return emptyAnswers(total);
   }
 }
 
@@ -41,9 +39,12 @@ function setHash(hash: string) {
   history.replaceState(null, "", location.pathname + location.search + hash);
 }
 
-export default function Scorecard() {
+export default function Scorecard({ lang }: { lang: Lang }) {
+  const locale = getLocale(lang);
+  const { areas, questions, m } = locale;
+  const TOTAL = questions.length;
   const shared = fromResultHash(location.hash, TOTAL);
-  const [answers, setAnswers] = useState<Answers>(() => shared ?? loadSaved());
+  const [answers, setAnswers] = useState<Answers>(() => shared ?? loadSaved(TOTAL));
   const [view, setView] = useState<View>(shared ? "results" : "intro");
   const [step, setStep] = useState(0);
 
@@ -88,6 +89,7 @@ export default function Scorecard() {
   if (view === "quiz") {
     return (
       <Quiz
+        locale={locale}
         answers={answers}
         step={step}
         onChoose={choose}
@@ -100,6 +102,7 @@ export default function Scorecard() {
   if (view === "results") {
     return (
       <Results
+        locale={locale}
         answers={answers}
         onRetake={() => {
           startOver();
@@ -111,10 +114,10 @@ export default function Scorecard() {
 
   const answered = countAnswered(answers);
   const startLabel = isComplete(answers)
-    ? "See my last results"
+    ? m.intro.seeLast
     : answered > 0
-      ? `Resume (${answered} of ${TOTAL} answered)`
-      : "Start the check";
+      ? m.intro.resume(answered, TOTAL)
+      : m.intro.start;
 
   const start = () => {
     if (isComplete(answers)) return setView("results");
@@ -132,7 +135,7 @@ export default function Scorecard() {
       </Button>
       {answered > 0 && (
         <Button variant="ghost" onClick={startOver}>
-          Start over
+          {m.intro.startOver}
         </Button>
       )}
     </div>
