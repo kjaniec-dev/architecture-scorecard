@@ -1,0 +1,52 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Scorecard from "../components/Scorecard";
+---
+
+<Layout
+  title="Architecture & Delivery Scorecard"
+  description="Free, browser-based architecture and delivery health check. Answer 20 questions and get a score per area, your 3 biggest risks and recommendations. No account, no tracking, no AI."
+>
+  <section class="static-only" aria-labelledby="intro-title">
+    <h1 id="intro-title">Architecture &amp; Delivery Scorecard</h1>
+    <p class="lead">
+      A free, browser-based health check for your system and the way you ship it. Answer 20 questions about
+      deployments, monitoring, backups and access to production, and get a score per area, your three biggest risks
+      and what to do about them.
+    </p>
+    <ul class="facts">
+      <li><strong>About 5 minutes</strong> &middot; 20 questions in 5 areas</li>
+      <li><strong>Private</strong> &middot; nothing is sent anywhere, it all runs in your browser</li>
+      <li><strong>Rule-based</strong> &middot; no AI, so you can see exactly how the score is built</li>
+    </ul>
+  </section>
+
+  <Scorecard client:only="react" />
+
+  <noscript>
+    <p class="notice">This scorecard needs JavaScript to run in your browser. Nothing is sent to a server.</p>
+  </noscript>
+
+  <section class="how static-only" aria-labelledby="how-title">
+    <h2 id="how-title">How it works</h2>
+    <dl>
+      <dt>No AI, just rules</dt>
+      <dd>
+        Every answer maps to a fixed score from 0 to 3. Each question has a weight, and your score is the weighted
+        share of the points available, per area and overall. The same answers always give the same result. Your
+        biggest risks are the questions with the largest weighted gap to the best answer.
+      </dd>
+      <dt>Private by design</dt>
+      <dd>
+        There are no accounts, cookies, analytics or third-party requests. Your answers stay in this browser (local
+        storage, so you can resume) and are never uploaded. A result link contains your answers in the part of the
+        URL after the <code>#</code>, which browsers do not send to servers.
+      </dd>
+      <dt>What it is, and is not</dt>
+      <dd>
+        A quick, honest self-assessment that surfaces common gaps. It is not an audit: it cannot see your real
+        system, so treat the output as a starting point for a conversation, not a verdict.
+      </dd>
+    </dl>
+  </section>
+</Layout>

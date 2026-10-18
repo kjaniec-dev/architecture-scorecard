@@ -1,5 +1,10 @@
 // Site-level settings. Edit these before deploying.
-export const config = {
+export const config: {
+  bookingUrl: string;
+  contactEmail: string;
+  repoUrl: string;
+  homeUrl: string;
+} = {
   // Where the "Book an architecture review" button goes.
   // Leave bookingUrl empty to open a pre-filled email to contactEmail instead.
   bookingUrl: "",

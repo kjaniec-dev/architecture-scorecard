@@ -5,9 +5,30 @@
 // `risk`, `impact` and `fix` are shown when the question ends up among the top risks.
 //
 // Changing the order or number of questions invalidates previously shared result links,
-// so bump ANSWER_FORMAT_VERSION in scoring.js if you do.
+// so bump ANSWER_FORMAT_VERSION in scoring.ts if you do.
 
-export const areas = [
+export type AreaId = "delivery" | "operations" | "resilience" | "security" | "architecture";
+
+export interface Area {
+  id: AreaId;
+  name: string;
+  short: string;
+  blurb: string;
+}
+
+export interface Question {
+  id: string;
+  area: AreaId;
+  weight: 1 | 2 | 3;
+  text: string;
+  /** Four options; the index of an option is its score (0-3). */
+  options: readonly [string, string, string, string];
+  risk: string;
+  impact: string;
+  fix: string;
+}
+
+export const areas: readonly Area[] = [
   {
     id: "delivery",
     name: "Delivery & Releases",
@@ -40,7 +61,7 @@ export const areas = [
   },
 ];
 
-export const questions = [
+export const questions: readonly Question[] = [
   // ---------------------------------------------------------------- Delivery
   {
     id: "deploy-method",

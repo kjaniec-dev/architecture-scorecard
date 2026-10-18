@@ -1,6 +1,14 @@
 // Plain-text summary of a result, used for the "Book an architecture review" email.
 
-export function buildSummary({ overall, rating, areaResults, risks, link }) {
+export interface SummaryInput {
+  overall: number;
+  rating: { label: string };
+  areaResults: { name: string; score: number }[];
+  risks: { title: string; areaName: string }[];
+  link: string;
+}
+
+export function buildSummary({ overall, rating, areaResults, risks, link }: SummaryInput): string {
   const lines = [
     `Architecture & Delivery Scorecard: ${overall}/100 (${rating.label})`,
     "",
@@ -14,17 +22,17 @@ export function buildSummary({ overall, rating, areaResults, risks, link }) {
   return lines.join("\n");
 }
 
-export function buildMailto({ to, overall, summary }) {
-  const subject = `Architecture review request (scorecard ${overall}/100)`;
+export function buildMailto(args: { to: string; overall: number; summary: string }): string {
+  const subject = `Architecture review request (scorecard ${args.overall}/100)`;
   const body = [
     "Hi,",
     "",
     "I would like to book an architecture review. Here are my scorecard results:",
     "",
-    summary,
+    args.summary,
     "",
     "A few words about our system and team:",
     "",
   ].join("\n");
-  return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  return `mailto:${args.to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
