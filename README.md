@@ -19,12 +19,19 @@ All logic is in [`src/lib/scoring.ts`](src/lib/scoring.ts).
 ## Stack
 
 [Astro](https://astro.build) (static output) + TypeScript (strict) + a small React island for the
-quiz and results. Vitest for tests. No runtime dependencies beyond React.
+quiz and results. Vitest for tests.
+
+UI comes from the KJ Product Kit ([`kjaniec-dev/ui-kit`](https://github.com/kjaniec-dev/ui-kit)):
+`@kjaniec-dev/design` (tokens, Tailwind v4 theme) and `@kjaniec-dev/ui` (Button, Card, Badge, Alert,
+Progress, ProgressRing, Radio), styled with Tailwind CSS 4. The radar chart is a small custom SVG
+that uses the kit's tokens. The kit switches theme with a `.dark` class, which a tiny script in
+`Layout.astro` sets from the OS preference.
 
 ```
 src/lib/          scoring, questions, summary, config (pure TypeScript, unit tested)
 src/components/   Scorecard (state), Quiz, Results, Radar
 src/pages/        index.astro (static intro + "how it works" for SEO)
+src/styles/       global.css (Tailwind + kit imports, radar, print)
 public/           favicon, CNAME, robots.txt
 ```
 

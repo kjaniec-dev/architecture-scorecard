@@ -26,7 +26,7 @@ export function Radar({ items, description }: Props) {
   const shape = items.map((item, i) => point(i, n, (RADIUS * item.score) / 100));
 
   return (
-    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="radar" role="img" aria-label={description}>
+    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="mx-auto block h-auto w-full" role="img" aria-label={description}>
       {RINGS.map((ring) => (
         <polygon
           key={ring}

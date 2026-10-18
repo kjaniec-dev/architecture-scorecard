@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { questions } from "../lib/questions";
+import { Button } from "@kjaniec-dev/ui";
+import { areas, questions } from "../lib/questions";
 import {
   countAnswered,
   decodeAnswers,
@@ -12,7 +13,6 @@ import {
 } from "../lib/scoring";
 import { Quiz } from "./Quiz";
 import { Results } from "./Results";
-import { areas } from "../lib/questions";
 
 const STORAGE_KEY = "architecture-scorecard.answers";
 const TOTAL = questions.length;
@@ -126,14 +126,14 @@ export default function Scorecard() {
   };
 
   return (
-    <div className="actions">
-      <button type="button" className="btn btn-primary" onClick={start}>
+    <div className="flex flex-wrap items-center gap-3">
+      <Button size="lg" onClick={start}>
         {startLabel}
-      </button>
+      </Button>
       {answered > 0 && (
-        <button type="button" className="btn btn-link" onClick={startOver}>
+        <Button variant="ghost" onClick={startOver}>
           Start over
-        </button>
+        </Button>
       )}
     </div>
   );

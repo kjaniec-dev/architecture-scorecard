@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Alert, Button, Card, Progress, Radio } from "@kjaniec-dev/ui";
 import { areas, questions } from "../lib/questions";
 import { countAnswered, type Answers } from "../lib/scoring";
 
@@ -35,50 +36,55 @@ export function Quiz({ answers, step, onChoose, onBack, onNext }: Props) {
   };
 
   return (
-    <section aria-labelledby="quiz-title">
-      <div className="progress">
-        <progress max={questions.length} value={answered} aria-label="Progress" />
-        <span className="progress-text" aria-live="polite">
+    <section aria-labelledby="quiz-title" className="space-y-5">
+      <div className="space-y-1.5">
+        <Progress value={(answered / questions.length) * 100} aria-label="Progress" />
+        <p className="text-sm text-muted-foreground" aria-live="polite">
           Step {step + 1} of {areas.length} · {answered} of {questions.length} answered
-        </span>
+        </p>
       </div>
-      <h2 id="quiz-title" tabIndex={-1} ref={heading}>
-        {area.name}
-      </h2>
-      <p className="muted">{area.blurb}</p>
+
+      <div>
+        <h2 id="quiz-title" tabIndex={-1} ref={heading} className="text-2xl font-bold outline-none">
+          {area.name}
+        </h2>
+        <p className="text-muted-foreground">{area.blurb}</p>
+      </div>
 
       {items.map(({ question, index }) => (
-        <fieldset key={question.id} className="question">
-          <legend>
-            <span className="q-number">{index + 1}.</span> {question.text}
+        <Card key={question.id} as="fieldset" className="p-5">
+          <legend className="px-1 font-bold">
+            <span className="text-muted-foreground">{index + 1}.</span> {question.text}
           </legend>
-          {question.options.map((option, score) => (
-            <label key={option} className="option">
-              <input
-                type="radio"
+          <div className="mt-2 grid gap-2">
+            {question.options.map((option, score) => (
+              <Radio
+                key={option}
                 name={`q-${question.id}`}
+                label={option}
                 checked={answers[index] === score}
                 onChange={() => {
                   setMessage("");
                   onChoose(index, score);
                 }}
+                className="w-full items-start rounded-lg border border-border px-3 py-2.5 hover:border-primary has-[:checked]:border-primary has-[:checked]:bg-muted"
               />
-              <span>{option}</span>
-            </label>
-          ))}
-        </fieldset>
+            ))}
+          </div>
+        </Card>
       ))}
 
-      <p className="form-message" role="alert">
-        {message}
-      </p>
-      <div className="actions">
-        <button type="button" className="btn btn-secondary" onClick={onBack}>
+      {message && (
+        <Alert variant="danger" role="alert">
+          {message}
+        </Alert>
+      )}
+
+      <div className="flex flex-wrap gap-3">
+        <Button variant="outline" onClick={onBack}>
           Back
-        </button>
-        <button type="button" className="btn btn-primary" onClick={next}>
-          {isLast ? "See my results" : "Next"}
-        </button>
+        </Button>
+        <Button onClick={next}>{isLast ? "See my results" : "Next"}</Button>
       </div>
     </section>
   );
