@@ -1,0 +1,11 @@
+{
+  "name": "architecture-scorecard",
+  "version": "1.0.0",
+  "description": "Free, browser-based architecture & delivery health check. No account, no tracking, no AI.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "test": "node --test \"test/*.test.js\""
+  }
+}
