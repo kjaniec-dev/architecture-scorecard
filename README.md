@@ -59,7 +59,7 @@ kept in the browser's local storage. A shareable result link holds the answers i
 ## Customise
 
 - `src/lib/config.ts`: contact email, or a booking URL (Cal.com, Calendly...). With no `bookingUrl`
-  the button opens an email with the results pre-filled. **Set `contactEmail` before deploying.**
+  the button opens an email with the results pre-filled.
 - `src/i18n/en.ts`, `src/i18n/pl.ts`: all question wording, options and recommendations.
 - `src/lib/questions.ts`: which questions exist, their area and weight. If you add, remove or
   reorder questions, bump `ANSWER_FORMAT_VERSION` in `src/lib/scoring.ts` so old links are rejected
@@ -67,7 +67,7 @@ kept in the browser's local storage. A shareable result link holds the answers i
 
 ## Develop
 
-Node 22.12+.
+Node 24 (see `.nvmrc`).
 
 ```sh
 npm install
